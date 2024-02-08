@@ -1,7 +1,7 @@
 library(sf)
 library(dplyr)
 library(ggplot2)
-
+setwd("~/work/Cartographie")
 commune <- st_read("commune_francemetro_2021.shp", options = "ENCODING=WINDOWS-1252")
 
 summary(commune)
@@ -73,3 +73,23 @@ for (i in 1:4) {
   
   commune_centre2[i]<-nom_commune_bretagne[intersection2[[i]],1]$libelle
 }
+commune_chef_lieu <- c("Saint-Brieuc","Quimper","Rennes","Vannes")
+distances<-NULL
+for (i in 1:4) {
+distances[i]<-st_distance(subset(commune, libelle ==commune_chef_lieu[i]) ,subset(commune, libelle ==commune_centre[i] ))
+}
+distances
+
+buffer_20km <- st_buffer(centroid_dept_bretagne, dist = 20000)  # La distance est en mètres, donc 20 km = 20000 mètres
+
+# Trouver les communes qui intersectent chaque zone tampon
+communes_proches <- lapply(1:nrow(buffer_20km), function(i) {
+  intersected_communes <- st_intersection(communes_bretagne, buffer_20km[i, ])
+  intersected_communes
+})
+
+# Afficher les résultats pour chaque centroïde
+for (i in 1:length(communes_proches)) {
+  print(paste("Communes à moins de 20 km du centroïde", i, ":", nrow(communes_proches[[i]])))
+}
+plot(communes_proches[1])
